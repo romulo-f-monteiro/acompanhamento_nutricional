@@ -7,10 +7,10 @@
     <meta name="description" content="App de acompanhamento nutricional.">
     <style>
         :root {
-            /* Paleta Base - MUDANÇA PARA VERDE */
-            --primary: #059669;       /* Verde Esmeralda */
+            /* Paleta Base - Verde Principal Mantido para elementos fixos */
+            --primary: #059669;       
             --primary-dark: #047857;
-            --bg-body: #f0fdf4;       /* Fundo levemente esverdeado */
+            --bg-body: #f8fafc;
             --surface: #ffffff;
             --text-main: #1f2937;
             --text-muted: #6b7280;
@@ -22,7 +22,7 @@
             --warning: #f59e0b;
             --neutral: #9ca3af;
 
-            /* Cor dinâmica do bloco atual */
+            /* Cor dinâmica do bloco atual (Inicia com verde, mas muda via JS) */
             --block-color: #059669; 
             
             /* Espaçamento */
@@ -112,8 +112,8 @@
             margin-bottom: 0.5rem;
             gap: 0.5rem;
         }
-        .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 4px 6px rgba(5, 150, 105, 0.2); }
-        .btn-primary:active { transform: scale(0.98); background-color: var(--primary-dark); }
+        .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-primary:active { transform: scale(0.98); filter: brightness(0.9); }
         .btn-secondary { background-color: white; border: 1px solid var(--border); color: var(--text-main); }
         .btn-ghost { background: transparent; color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem; }
 
@@ -154,10 +154,13 @@
         }
         .likert-option.selected {
             border-color: var(--block-color);
-            background-color: #ecfdf5;
+            background-color: #f0f9ff; /* Azulzinho claro genérico ou muda via JS */
             transform: translateY(-2px);
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
+        /* Ajuste para usar a cor do bloco no background da seleção */
+        .likert-option.selected { background-color: var(--block-bg-light, #f0fdf4); }
+        
         .likert-emoji { font-size: 1.8rem; line-height: 1.2; margin-bottom: 0.25rem; }
         .likert-label { font-size: 0.7rem; font-weight: 700; color: #4b5563; line-height: 1.1; }
 
@@ -182,23 +185,26 @@
         .check-option input { margin-right: 0.75rem; width: 20px; height: 20px; accent-color: var(--block-color); }
 
         /* Bristol Scale Styles */
+        .bristol-container { display: flex; flex-direction: column; gap: 0.8rem; }
         .bristol-option {
             display: flex;
             align-items: flex-start;
             padding: 1rem;
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
-            margin-bottom: 0.5rem;
             cursor: pointer;
             background: white;
+            transition: transform 0.2s;
         }
-        .bristol-option.selected { border: 2px solid var(--primary); background: #ecfdf5; }
-        .bristol-emoji { font-size: 2.5rem; margin-right: 1rem; min-width: 50px; text-align: center; }
-        .bristol-info h4 { margin: 0 0 0.2rem 0; font-size: 1rem; color: var(--primary-dark); }
-        .bristol-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); }
+        .bristol-option:active { transform: scale(0.98); }
+        .bristol-option.selected { border: 2px solid var(--block-color); background: #fdf2f8; /* Exemplo, será sobrescrito dinamicamente */ }
+        .bristol-emoji { font-size: 2.2rem; margin-right: 1rem; min-width: 50px; text-align: center; line-height: 1; }
+        .bristol-info { flex: 1; }
+        .bristol-info h4 { margin: 0 0 0.3rem 0; font-size: 1rem; color: var(--text-main); font-weight: 800; }
+        .bristol-info p { margin: 0; font-size: 0.9rem; color: #555; line-height: 1.4; }
         .bristol-tag { 
-            display: inline-block; background: #eee; padding: 2px 6px; 
-            border-radius: 4px; font-size: 0.7rem; margin-top: 4px; font-weight: bold; 
+            display: block; margin-top: 0.5rem; font-size: 0.85rem; 
+            font-weight: 700; color: var(--block-color);
         }
 
         /* Observação Inline */
@@ -209,6 +215,28 @@
         }
         .obs-inline label { font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-bottom: 0.2rem; }
         .obs-inline textarea { font-size: 0.9rem; padding: 0.6rem; min-height: 60px; resize: vertical; }
+
+        /* Esportes Multiplos */
+        .sport-item {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 0.5rem;
+            overflow: hidden;
+            background: #fff;
+        }
+        .sport-header {
+            padding: 0.8rem;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .sport-header input { width: 20px; height: 20px; margin-right: 10px; accent-color: var(--block-color); }
+        .sport-details {
+            padding: 0 0.8rem 0.8rem 0.8rem;
+            background: #f8fafc;
+            border-top: 1px solid #eee;
+        }
 
         /* Progress Bar */
         .progress-bar {
@@ -249,7 +277,7 @@
         .summary-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
         .summary-item:last-child { border-bottom: none; border-radius: 0 0 8px 8px; }
         .summary-q { flex: 1; font-size: 0.95rem; font-weight: 500; color: #374151; padding-right: 1rem; }
-        .summary-res { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--primary-dark); }
+        .summary-res { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: var(--text-main); }
         .summary-obs { font-size: 0.85rem; color: #6b7280; font-style: italic; margin-top: 0.4rem; background: #f9fafb; padding: 0.4rem; border-radius: 6px; }
 
         .hidden { display: none !important; }
@@ -259,18 +287,12 @@
 
         /* --- PRINT STYLES (PDF A4) --- */
         @media print {
-            @page { 
-                size: A4; 
-                margin: 1.5cm; /* Margem padrão para evitar corte */
-            }
-            /* Tentativa de esconder headers do browser, mas depende da config do usuário */
+            @page { size: A4; margin: 1.5cm; }
             @page { margin-top: 0; margin-bottom: 0; }
             body { 
-                padding-top: 1.5cm; 
-                padding-bottom: 1.5cm; 
+                padding-top: 1.5cm; padding-bottom: 1.5cm; 
                 background: white; 
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact; 
+                -webkit-print-color-adjust: exact; print-color-adjust: exact; 
             }
 
             .no-print, .app-header, .progress-bar, .btn { display: none !important; }
@@ -278,7 +300,6 @@
             
             .card { box-shadow: none; border: 1px solid #eee; break-inside: avoid; margin-bottom: 1rem; }
             
-            /* Print Header Spec */
             .print-header {
                 display: block !important;
                 text-align: center;
@@ -293,7 +314,6 @@
             .summary-header { background: #f3f4f6 !important; color: #000 !important; border: 1px solid #ccc; border-bottom: none; font-weight: 800; }
             .summary-item { border: 1px solid #ccc; border-top: none; }
             
-            /* Emojis no print */
             .st-good::after { content: " (Bom)"; font-size: 0.8rem; color: #065f46; }
             .st-bad::after { content: " (Atenção)"; font-size: 0.8rem; color: #991b1b; }
         }
@@ -327,7 +347,7 @@
         <!-- 1. Tela de Boas-vindas -->
         <section id="view-welcome" class="view active">
             <div class="card text-center" style="padding: 2rem 1rem;">
-                <h2 style="color: var(--primary)">Bem-vindo(a)! 🌿</h2>
+                <h2 style="color: var(--primary)">Bem-vindo(a)!</h2>
                 <p style="font-size: 1.1rem; line-height: 1.6;">Este é um momento para entendermos melhor sua rotina e desafios, para que possamos ajustar suas metas e hábitos.</p>
                 
                 <div style="background: #fffbeb; border: 1px solid #fcd34d; padding: 1rem; border-radius: 8px; margin: 1.5rem 0;">
@@ -359,7 +379,6 @@
                     <label>Data de Referência (Semana)</label>
                     <input type="date" id="inp-date">
                 </div>
-                <!-- Removido: Nome da Semana -->
                 <div class="form-group">
                     <label>Observação Geral (Opcional)</label>
                     <textarea id="inp-general-obs" rows="3" placeholder="Algo importante para mencionar antes de começar?"></textarea>
@@ -370,9 +389,7 @@
 
         <!-- 3. Tela do Questionário (Dinâmica) -->
         <section id="view-questionnaire" class="view">
-            <!-- Conteúdo injetado via JS -->
             <div id="block-container"></div>
-            
             <div class="nav-buttons" style="display: flex; gap: 1rem; margin-top: 1rem; padding-bottom: 2rem;">
                 <button class="btn btn-secondary" onclick="app.prevBlock()">Voltar</button>
                 <button class="btn btn-primary" onclick="app.nextBlock()" id="btn-next-block">Próximo</button>
@@ -391,7 +408,11 @@
 
             <div class="card no-print text-center">
                 <h2 style="color: var(--primary)">Resumo Visual</h2>
-                <p style="color: #4b5563; font-size: 1.1rem;">Revise os ícones de alerta (❌) e sucesso, você está indo bem (✅).</p>
+                <p style="color: #4b5563; font-size: 1rem;">
+                    Legenda: <br>
+                    ✅ <strong>Verde:</strong> Você está indo bem! Continue assim.<br>
+                    ❌ <strong>Vermelho:</strong> Ponto de atenção. Vamos melhorar?
+                </p>
                 
                 <div class="grid-actions mt-4">
                     <button class="btn btn-primary" onclick="window.print()">
@@ -420,9 +441,7 @@
     <div id="toast" class="toast">Copiado com sucesso! Cole no WhatsApp.</div>
 
     <script>
-        // --- 1. CONFIGURAÇÃO PADRÃO (Dados do app) ---
-        
-        // Emojis e Labels customizados para perguntas negativas (ex: Estresse, Constipação)
+        // --- CONFIGURAÇÃO DE ESCALAS ---
         const ESCALA_INVERTIDA = [
             { v: 'Nenhuma', e: '🤩', l: 'Nenhuma' },
             { v: 'Pouca', e: '🙂', l: 'Pouca' },
@@ -430,57 +449,71 @@
             { v: 'Muita', e: '😞', l: 'Muita' }
         ];
 
-        // Emojis Padrão (Positivo)
         const ESCALA_PADRAO = [
             { v: 'Ruim', e: '😞', l: 'Ruim' },
             { v: 'Ok', e: '😐', l: 'Ok' },
             { v: 'Bem', e: '🙂', l: 'Bem' },
             { v: 'Ótimo', e: '🤩', l: 'Ótimo' }
         ];
-        
-        const ESCALA_CONTROLE = [
-             { v: 'Difícil', e: '😞', l: 'Foi Difícil' },
-             { v: 'Razoável', e: '😐', l: 'Mais ou Menos' },
-             { v: 'Fácil', e: '🤩', l: 'Foi Fácil' }
+
+        const ESCALA_HORARIO = [
+            { v: 'Nunca', e: '😞', l: 'Nunca' },
+            { v: 'Às vezes', e: '😐', l: 'Às vezes' },
+            { v: 'Quase sempre', e: '🙂', l: 'Quase sempre' },
+            { v: 'Sempre', e: '🤩', l: 'Sempre' }
+        ];
+
+        const ESCALA_PRESSA = [
+            { v: 'Sempre', e: '😞', l: 'Sempre' },
+            { v: 'Quase sempre', e: '😐', l: 'Quase sempre' },
+            { v: 'Às vezes', e: '🙂', l: 'Às vezes' },
+            { v: 'Nunca', e: '🤩', l: 'Nunca' }
+        ];
+
+        // --- DADOS DO BRISTOL ATUALIZADOS ---
+        const DADOS_BRISTOL = [
+            { t: 1, n: 'Tipo 1 – Bolinhas duras', desc: 'Fezes em pedaços pequenos, separados, muito duros. Parecem bolinhas. Difíceis de eliminar.', meta: '➡️ Sugere constipação importante', e: '🟤' },
+            { t: 2, n: 'Tipo 2 – Salsicha irregular', desc: 'Fezes em formato de salsicha, mas grumosas e duras. Superfície irregular.', meta: '➡️ Constipação', e: '💩' },
+            { t: 3, n: 'Tipo 3 – Salsicha com rachaduras', desc: 'Fezes em formato de salsicha. Superfície com rachaduras. Consistência firme, porém mais fácil de eliminar.', meta: '➡️ Próximo do normal', e: '🌭' },
+            { t: 4, n: 'Tipo 4 – Salsicha lisa e macia', desc: 'Fezes em formato de salsicha ou cobra. Lisas, macias e bem formadas. Eliminação fácil.', meta: '➡️ Considerado o padrão ideal', e: '🐍' },
+            { t: 5, n: 'Tipo 5 – Pedaços macios', desc: 'Fezes em pedaços separados. Bordas bem definidas, macias. Eliminadas facilmente.', meta: '➡️ Leve tendência à diarreia ou pouco tempo no intestino', e: '🫠' },
+            { t: 6, n: 'Tipo 6 – Pastosas', desc: 'Fezes pastosas, sem forma definida. Bordas irregulares, aspecto “desfeito”.', meta: '➡️ Diarreia leve', e: '🍦' },
+            { t: 7, n: 'Tipo 7 – Líquidas', desc: 'Fezes totalmente líquidas. Sem pedaços sólidos.', meta: '➡️ Diarreia', e: '🌊' }
         ];
 
         const CONFIG = {
-            // Paleta de Verdes/Terrosos para diferenciar blocos levemente, ou manter tom sobre tom
-            colors: ['#059669', '#047857', '#059669', '#047857', '#059669', '#047857', '#059669'],
+            // Paleta Colorida (Revertida)
+            colors: ['#2563eb', '#059669', '#7c3aed', '#db2777', '#d97706', '#dc2626', '#4b5563'],
             blocks: [
                 {
-                    id: 'diet', title: 'A) Metas / Alimentação',
+                    id: 'diet', title: 'Metas / Alimentação',
                     questions: [
                         { id: 'diet_plan', text: 'Está conseguindo cumprir a dieta/plano?', type: 'likert', scale: ESCALA_PADRAO, obsPlaceholder: 'O que te impediu? O que facilitou?' },
+                        { id: 'diet_schedule', text: 'Comendo sempre no mesmo horário?', type: 'likert', scale: ESCALA_HORARIO, obsPlaceholder: 'Quais dias falhou?' },
+                        { id: 'diet_hurry', text: 'Comendo com pressa?', type: 'likert', scale: ESCALA_PRESSA, obsPlaceholder: 'Mastigou bem?' },
                         { id: 'diet_weigh', text: 'Está conseguindo pesar os alimentos?', type: 'likert', scale: ESCALA_PADRAO, obsPlaceholder: 'Quais refeições teve dificuldade?' },
                         { id: 'diet_fruits', text: 'Frutas: em quantos dias comeu?', type: 'frequency', rule: { type: 'higherIsBetter', target: 5 }, obsPlaceholder: 'Quais frutas?' },
                         { id: 'diet_veg', text: 'Vegetais: em quantos dias consumiu?', type: 'frequency', rule: { type: 'higherIsBetter', target: 5 }, obsPlaceholder: 'Salada crua ou cozida?' },
                         { id: 'diet_fried', text: 'Frituras: em quantos dias consumiu?', type: 'frequency', rule: { type: 'lowerIsBetter', target: 2 }, obsPlaceholder: 'O que comeu?' },
-                        
-                        // Doces reformulado
                         { id: 'diet_sweets_num', text: 'Doces: quantos na semana?', type: 'slider_count', max: 20, rule: { type: 'lowerIsBetter', target: 3 }, obsPlaceholder: 'Quais doces?' },
-                        { id: 'diet_sweets_ctrl', text: 'Teve dificuldade de controlar os doces?', type: 'likert', scale: ESCALA_INVERTIDA, rule: { type: 'lowerIsBetter' }, obsPlaceholder: 'Algum momento específico?' }, // Invertido: Muita dificuldade é ruim
-                        
+                        { id: 'diet_sweets_ctrl', text: 'Teve dificuldade de controlar os doces?', type: 'likert', scale: ESCALA_INVERTIDA, rule: { type: 'lowerIsBetter' }, obsPlaceholder: 'Algum momento específico?' },
                         { id: 'diet_fastfood', text: 'Fast food: em quantos dias?', type: 'frequency', rule: { type: 'lowerIsBetter', target: 1 }, obsPlaceholder: 'Pizza, lanche...?' },
                         { id: 'diet_industrial', text: 'Industrializados: em quantos dias?', type: 'frequency', rule: { type: 'lowerIsBetter', target: 1 }, obsPlaceholder: 'Biscoitos, salgadinhos?' },
-                        
-                        // Proteína renomeada
                         { id: 'diet_protein', text: 'Conseguiu comer a quantidade recomenda de Proteína nas refeições?', type: 'likert', scale: ESCALA_PADRAO, obsPlaceholder: 'Faltou em alguma refeição?' },
-                        
                         { id: 'diet_breakfast', text: 'Tomou café da manhã?', type: 'frequency', rule: { type: 'higherIsBetter', target: 5 }, obsPlaceholder: 'O que comeu?' },
                         { id: 'diet_planning', text: 'Planejamento (marmita/organização)', type: 'likert', scale: ESCALA_PADRAO, obsPlaceholder: 'Como se organizou?' }
                     ]
                 },
                 {
-                    id: 'activity', title: 'B) Atividade Física / Movimento',
+                    id: 'activity', title: 'Atividade Física / Movimento',
                     questions: [
                         { id: 'act_gym', text: 'Academia: quantos dias?', type: 'frequency', rule: { type: 'higherIsBetter', target: 3 }, obsPlaceholder: 'Qual treino?' },
                         { id: 'act_done', text: 'Quando foi, concluiu o treino?', type: 'likert', scale: ESCALA_PADRAO, obsPlaceholder: 'Faltou algum exercício?' },
                         { id: 'act_cardio', text: 'Cardio (caminhada/corrida): quantos dias?', type: 'frequency', rule: { type: 'higherIsBetter', target: 3 }, obsPlaceholder: 'Tempo/Distância?' },
                         { id: 'act_mobil', text: 'Alongamento/mobilidade: quantos dias?', type: 'frequency', rule: { type: 'higherIsBetter', target: 3 }, obsPlaceholder: 'Antes ou depois do treino?' },
                         
-                        // Esporte com detalhes
-                        { id: 'act_sport', text: 'Esporte praticado', type: 'sport_selector', obsPlaceholder: 'Detalhes do jogo/treino' },
+                        // Novo Esporte (Múltipla Escolha)
+                        { id: 'act_sport', text: 'Esportes praticados', type: 'sport_multi', obsPlaceholder: 'Detalhes adicionais' },
                         
                         { id: 'act_walking', text: 'Andou mais a pé na semana?', type: 'likert', scale: ESCALA_PADRAO, obsPlaceholder: 'Trocou carro por caminhada?' },
                         { id: 'act_stairs', text: 'Subiu escadas mais que o normal?', type: 'likert', scale: ESCALA_PADRAO, obsPlaceholder: 'Onde?' },
@@ -490,7 +523,7 @@
                     ]
                 },
                 {
-                    id: 'sleep', title: 'C) Sono',
+                    id: 'sleep', title: 'Sono',
                     questions: [
                         { id: 'sleep_quality', text: 'Como avalia seu sono?', type: 'likert', scale: ESCALA_PADRAO, obsPlaceholder: 'Acordou disposto?' },
                         { id: 'sleep_hours', text: 'Horas médias por noite', type: 'number', rule: { type: 'range', min: 6, max: 9 }, obsPlaceholder: 'Dormiu tarde?' },
@@ -503,25 +536,22 @@
                     ]
                 },
                 {
-                    id: 'hydration', title: 'D) Bebidas / Hidratação',
+                    id: 'hydration', title: 'Bebidas / Hidratação',
                     questions: [
                         { id: 'hydro_water', text: 'Água: litros por dia', type: 'number', step: 0.1, rule: { type: 'higherIsBetter', target: 2 }, obsPlaceholder: 'Garrafinha?' },
-                        
-                        // Mais bebidas
                         { id: 'hydro_soda', text: 'Refrigerante (dias)', type: 'frequency', rule: { type: 'lowerIsBetter', target: 1 }, obsPlaceholder: 'Normal ou zero?' },
                         { id: 'hydro_juice', text: 'Suco Natural (dias)', type: 'frequency', obsPlaceholder: 'Qual fruta? Com açúcar?' },
                         { id: 'hydro_juice_box', text: 'Suco Industrializado (dias)', type: 'frequency', rule: { type: 'lowerIsBetter', target: 1 }, obsPlaceholder: 'Néctar ou pó?' },
                         { id: 'hydro_tea', text: 'Chá (dias)', type: 'frequency', obsPlaceholder: 'Qual tipo? Adoçado?' },
                         { id: 'hydro_coffee', text: 'Café: xícaras por dia', type: 'number', obsPlaceholder: 'Com açúcar?' },
                         { id: 'hydro_energy', text: 'Energético (dias)', type: 'frequency', rule: { type: 'lowerIsBetter', target: 0 }, obsPlaceholder: 'Qual marca?' },
-                        
                         { id: 'hydro_alcohol', text: 'Cerveja (latas na semana)', type: 'number', rule: { type: 'lowerIsBetter', target: 2 }, obsPlaceholder: 'Fim de semana?' },
                         { id: 'hydro_wine', text: 'Vinho (taças na semana)', type: 'number', rule: { type: 'lowerIsBetter', target: 2 }, obsPlaceholder: 'Jantar?' },
                         { id: 'hydro_destill', text: 'Destilados/Drinks (copos)', type: 'number', rule: { type: 'lowerIsBetter', target: 1 }, obsPlaceholder: 'Qual bebida?' }
                     ]
                 },
                 {
-                    id: 'lifestyle', title: 'E) Estilo de Vida / Emoções',
+                    id: 'lifestyle', title: 'Estilo de Vida / Emoções',
                     questions: [
                         { id: 'life_stress', text: 'Nível de Estresse na semana', type: 'likert', scale: ESCALA_INVERTIDA, rule: { type: 'lowerIsBetter' }, obsPlaceholder: 'Trabalho, casa?' },
                         { id: 'life_anxiety', text: 'Nível de Ansiedade na semana', type: 'likert', scale: ESCALA_INVERTIDA, rule: { type: 'lowerIsBetter' }, obsPlaceholder: 'Algum gatilho?' },
@@ -529,45 +559,42 @@
                         { id: 'life_compulsion', text: 'Teve episódios de compulsão?', type: 'likert', scale: ESCALA_INVERTIDA, rule: { type: 'lowerIsBetter' }, obsPlaceholder: 'Qual horário?' },
                         { id: 'life_routine', text: 'Conseguiu manter a rotina?', type: 'likert', scale: ESCALA_PADRAO, obsPlaceholder: 'Imprevistos?' },
                         { id: 'life_sun', text: 'Exposição ao sol (dias)', type: 'frequency', rule: { type: 'higherIsBetter', target: 4 }, obsPlaceholder: 'Horário?' },
-                        // Telas separadas
                         { id: 'life_screen_mobile', text: 'Tempo de tela no celular (noite)', type: 'likert', scale: ESCALA_INVERTIDA, rule: { type: 'lowerIsBetter' }, obsPlaceholder: 'Redes sociais?' },
                         { id: 'life_screen_pc', text: 'Tempo de tela computador', type: 'likert', scale: ESCALA_INVERTIDA, rule: { type: 'lowerIsBetter' }, obsPlaceholder: 'Trabalho ou jogos?' }
                     ]
                 },
                 {
-                    id: 'gut', title: 'F) Saúde Intestinal',
+                    id: 'gut', title: 'Saúde Intestinal',
                     questions: [
                         { id: 'gut_poop', text: 'Evacuações por dia (média)', type: 'number', step: 1, obsPlaceholder: 'Horário regular?' },
                         { id: 'gut_constipation', text: 'Sentiu Constipação (prisão de ventre)?', type: 'likert', scale: ESCALA_INVERTIDA, rule: { type: 'lowerIsBetter' }, obsPlaceholder: 'Quantos dias sem ir?' },
                         { id: 'gut_diarrhea', text: 'Teve Diarreia?', type: 'likert', scale: ESCALA_INVERTIDA, rule: { type: 'lowerIsBetter' }, obsPlaceholder: 'Algum alimento causou?' },
                         { id: 'gut_bloating', text: 'Inchaço/Gases?', type: 'likert', scale: ESCALA_INVERTIDA, rule: { type: 'lowerIsBetter' }, obsPlaceholder: 'Após qual refeição?' },
                         // Bristol Scale
-                        { id: 'gut_bristol', text: 'Escala de Bristol (Formato das fezes)', type: 'bristol', rule: { type: 'range', min: 3, max: 4 }, obsPlaceholder: 'Variou durante a semana?' }
+                        { id: 'gut_bristol', text: 'Escala de Bristol', type: 'bristol', rule: { type: 'range', min: 3, max: 4 }, obsPlaceholder: 'Variou durante a semana?' }
                     ]
                 },
                 {
-                    id: 'adherence', title: 'G) Aderência e Barreiras',
+                    id: 'adherence', title: 'Aderência e Barreiras',
                     questions: [
-                        { id: 'adh_hard', text: 'O que mais dificultou?', type: 'checkbox', options: ['Tempo', 'Social', 'Ansiedade', 'Trabalho', 'Finanças', 'Sono', 'Fome', 'Viagem'], other: true, obsPlaceholder: 'Explique melhor...' },
-                        { id: 'adh_help', text: 'O que mais ajudou?', type: 'checkbox', options: ['Planejamento', 'Treino', 'Descanso', 'Família', 'Organização'], other: true, obsPlaceholder: 'Explique melhor...' },
+                        { id: 'adh_hard', text: 'O que mais dificultou, de modo geral, alcançar suas metas?', type: 'checkbox', options: ['Tempo', 'Social', 'Ansiedade', 'Trabalho', 'Finanças', 'Sono', 'Fome', 'Viagem'], other: true, obsPlaceholder: 'Explique melhor...' },
+                        { id: 'adh_help', text: 'O que mais ajudou no cumprimento das suas metas?', type: 'checkbox', options: ['Planejamento', 'Treino', 'Descanso', 'Família', 'Organização'], other: true, obsPlaceholder: 'Explique melhor...' },
                         { id: 'adh_goal', text: 'Meta pequena para próxima semana', type: 'text', obsPlaceholder: 'Ex: Beber mais água, dormir cedo...' }
                     ]
                 }
             ]
         };
 
-        // --- 2. ESTADO DO APP ---
         const AppState = {
             data: {
                 patient: '',
                 date: new Date().toISOString().split('T')[0],
                 generalObs: '',
-                answers: {} // { questionId: { value: x, other: y, obs: z, sportDetails: {} } }
+                answers: {} 
             },
             currentBlockIndex: 0
         };
 
-        // --- 3. LÓGICA PRINCIPAL (APP) ---
         const app = {
             init: () => {
                 const savedSession = localStorage.getItem('app_session_v2');
@@ -640,12 +667,15 @@
                 
                 const color = CONFIG.colors[blockIndex % CONFIG.colors.length];
                 document.documentElement.style.setProperty('--block-color', color);
+                // Cor de fundo leve para seleção
+                const rgb = hexToRgb(color);
+                document.documentElement.style.setProperty('--block-bg-light', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.1)`);
 
                 const container = document.getElementById('block-container');
                 container.innerHTML = `
                     <div class="card" style="text-align:center;">
                         <small style="color: ${color}; font-weight: bold; text-transform: uppercase;">Bloco ${blockIndex + 1} de ${totalBlocks}</small>
-                        <h2 style="margin-top: 0.5rem; color: var(--primary-dark);">${block.title}</h2>
+                        <h2 style="margin-top: 0.5rem; color: #374151;">${block.title}</h2>
                     </div>
                 `;
 
@@ -684,7 +714,6 @@
                 app.saveSession();
                 app.goToView('summary');
                 
-                // Formatação da data BR
                 const dateParts = AppState.data.date.split('-');
                 const dateFormatted = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : AppState.data.date;
                 const now = new Date().toLocaleString('pt-BR');
@@ -705,18 +734,17 @@
                     
                     block.questions.forEach(q => {
                         const ans = AppState.data.answers[q.id];
-                        // Mostrar se tiver valor preenchido ou observação
-                        if (ans && ((ans.value !== undefined && ans.value !== '' && ans.value !== '0') || ans.obs)) {
+                        // Renderizar se tiver valor OU observação
+                        if (ans && ((ans.value !== undefined && ans.value !== '' && ans.value !== '0' && (Array.isArray(ans.value) ? ans.value.length > 0 : true)) || ans.obs)) {
                             const status = logic.evaluate(q, ans.value);
                             const displayVal = logic.formatValue(q, ans.value, ans.other, ans.sportDetails);
                             
                             let badgeClass = 'st-neutral';
-                            let icon = ''; // Neutro não mostra ícone, só texto se quiser
+                            let icon = ''; 
                             if (status === 'good') { badgeClass = 'st-good'; icon = '✅'; }
                             if (status === 'bad') { badgeClass = 'st-bad'; icon = '❌'; }
 
-                            // Se for slider/numero, só mostra check se tiver regra
-                            if (!q.rule && q.type !== 'likert') icon = ''; 
+                            if (!q.rule && q.type !== 'likert' && q.type !== 'bristol') icon = ''; 
 
                             html += `
                                 <div class="summary-item">
@@ -770,8 +798,8 @@
                              const icon = status === 'good' ? '✅' : (status === 'bad' ? '❌' : '▪️');
                              const valText = logic.formatValue(q, ans.value, ans.other, ans.sportDetails);
                              
-                             if (valText && valText !== '0' && valText !== '') {
-                                blockText += `${icon} ${q.text}: ${valText}\n`;
+                             if ((valText && valText !== '0' && valText !== '') || ans.obs) {
+                                if(valText) blockText += `${icon} ${q.text}: ${valText}\n`;
                                 if(ans.obs) blockText += `   _Obs: ${ans.obs}_\n`;
                                 hasAns = true;
                              }
@@ -790,7 +818,6 @@
             }
         };
 
-        // --- 4. RENDERIZADOR (UI) ---
         const renderer = {
             createQuestion: (q, savedAns = {}) => {
                 const wrapper = document.createElement('div');
@@ -800,9 +827,7 @@
                 let inputHtml = '';
                 const val = savedAns.value !== undefined ? savedAns.value : '';
 
-                // LIKERT
                 if (q.type === 'likert') {
-                    // Usa escala customizada ou padrão
                     const scale = q.scale || ESCALA_PADRAO;
                     inputHtml = `<div class="likert-container" id="likert-${q.id}">
                         ${scale.map(opt => `
@@ -815,7 +840,6 @@
                     </div>`;
                 }
                 
-                // SLIDER NUMERICO (DOCES)
                 else if (q.type === 'slider_count') {
                      inputHtml = `<div class="range-container">
                         <span id="disp-${q.id}" class="range-value">${val !== '' ? val : 0}</span>
@@ -824,7 +848,6 @@
                     </div>`;
                 }
 
-                // NUMBER INPUT
                 else if (q.type === 'number') {
                     inputHtml = `<div style="display:flex; gap:0.5rem; align-items:center;">
                         <button class="btn btn-secondary" style="width:auto; padding:0.5rem 1rem;" onclick="renderer.stepInput('${q.id}', -${q.step||1})">-</button>
@@ -834,12 +857,10 @@
                     </div>`;
                 }
                 
-                // TIME INPUT
                 else if (q.type === 'time') {
                      inputHtml = `<input type="time" value="${val}" oninput="app.saveAnswer('${q.id}', this.value)">`;
                 }
 
-                // FREQUENCY (0-7 DIAS)
                 else if (q.type === 'frequency') {
                     inputHtml = `<div class="range-container">
                         <span id="disp-${q.id}" class="range-value">${val !== '' ? val : 0} dias</span>
@@ -848,19 +869,10 @@
                     </div>`;
                 }
                 
-                // BRISTOL SCALE
                 else if (q.type === 'bristol') {
-                    const types = [
-                        { t: 1, n: 'Tipo 1', desc: 'Bolinhas duras e separadas', meta: 'Constipação importante', e: '🟤' },
-                        { t: 2, n: 'Tipo 2', desc: 'Salsicha irregular e grumosa', meta: 'Constipação', e: '💩' },
-                        { t: 3, n: 'Tipo 3', desc: 'Salsicha com rachaduras', meta: 'Normal', e: '🌭' },
-                        { t: 4, n: 'Tipo 4', desc: 'Salsicha lisa e macia (Ideal)', meta: 'Ideal', e: '🐍' },
-                        { t: 5, n: 'Tipo 5', desc: 'Pedaços macios separados', meta: 'Tendência diarreia', e: '🫠' },
-                        { t: 6, n: 'Tipo 6', desc: 'Pastosa / Sem forma', meta: 'Diarreia leve', e: '🍦' },
-                        { t: 7, n: 'Tipo 7', desc: 'Líquida total', meta: 'Diarreia', e: '🌊' }
-                    ];
-                    inputHtml = `<div class="bristol-container">
-                        ${types.map(t => `
+                    inputHtml = `<div class="text-muted text-sm mb-2" style="text-align:center;">A seguir selecione a sua última evacuação:</div>
+                    <div class="bristol-container">
+                        ${DADOS_BRISTOL.map(t => `
                             <div class="bristol-option ${val == t.t ? 'selected' : ''}" onclick="renderer.selectBristol('${q.id}', ${t.t}, this)">
                                 <div class="bristol-emoji">${t.e}</div>
                                 <div class="bristol-info">
@@ -873,12 +885,10 @@
                     </div>`;
                 }
 
-                // TEXT
                 else if (q.type === 'text') {
                     inputHtml = `<textarea rows="2" oninput="app.saveAnswer('${q.id}', this.value)">${val}</textarea>`;
                 }
                 
-                // CHECKBOX
                 else if (q.type === 'checkbox') {
                     const checks = Array.isArray(val) ? val : [];
                     inputHtml = `<div class="check-group">
@@ -892,29 +902,35 @@
                     </div>`;
                 }
                 
-                // SPORT SELECTOR
-                else if (q.type === 'sport_selector') {
+                // MULTI SPORT SELECTOR (NOVO)
+                else if (q.type === 'sport_multi') {
                     const sports = ['Musculação', 'Crossfit', 'Corrida', 'Futebol', 'Vôlei', 'Natação', 'Luta', 'Pilates', 'Yoga', 'Funcional', 'Outros'];
-                    const details = savedAns.sportDetails || { freq: '', min: '' };
-                    const currentSport = val;
+                    const currentSports = Array.isArray(val) ? val : [];
+                    const details = savedAns.sportDetails || {};
                     
-                    inputHtml = `
-                        <select onchange="renderer.handleSportChange('${q.id}', this)" style="margin-bottom:1rem;">
-                            <option value="">Selecione o esporte...</option>
-                            ${sports.map(s => `<option value="${s}" ${currentSport === s ? 'selected' : ''}>${s}</option>`).join('')}
-                        </select>
-                        <div id="sport-details-${q.id}" class="${currentSport ? '' : 'hidden'}" style="background:#f0fdf4; padding:1rem; border-radius:8px;">
-                            <label class="text-sm">Quantas vezes na semana?</label>
-                            <input type="number" value="${details.freq}" placeholder="Ex: 3" oninput="renderer.saveSportDetails('${q.id}', 'freq', this.value)">
-                            <label class="text-sm">Quantos minutos por treino?</label>
-                            <input type="number" value="${details.min}" placeholder="Ex: 60" oninput="renderer.saveSportDetails('${q.id}', 'min', this.value)">
-                        </div>
-                    `;
+                    inputHtml = `<div class="check-group">
+                        ${sports.map(s => `
+                            <div class="sport-item">
+                                <label class="sport-header">
+                                    <input type="checkbox" value="${s}" ${currentSports.includes(s) ? 'checked' : ''} 
+                                           onchange="renderer.handleMultiSport('${q.id}', this)">
+                                    ${s}
+                                </label>
+                                <div id="details-${q.id}-${s.replace(/\s+/g,'')}" class="sport-details ${currentSports.includes(s) ? '' : 'hidden'}">
+                                    <label class="text-sm mt-2">Vezes na semana:</label>
+                                    <input type="number" placeholder="Ex: 3" value="${details[s]?.freq || ''}" 
+                                           oninput="renderer.saveMultiSportDetails('${q.id}', '${s}', 'freq', this.value)">
+                                    <label class="text-sm mt-1">Minutos:</label>
+                                    <input type="number" placeholder="Ex: 60" value="${details[s]?.min || ''}" 
+                                           oninput="renderer.saveMultiSportDetails('${q.id}', '${s}', 'min', this.value)">
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>`;
                 }
 
                 wrapper.insertAdjacentHTML('beforeend', inputHtml);
                 
-                // Opção Outros (para Checkbox)
                 if (q.other) {
                     const otherVal = savedAns.other || '';
                     wrapper.insertAdjacentHTML('beforeend', `
@@ -925,7 +941,6 @@
                     `);
                 }
 
-                // CAIXA DE OBSERVAÇÃO (TODAS AS PERGUNTAS)
                 const obsVal = savedAns.obs || '';
                 wrapper.insertAdjacentHTML('beforeend', `
                     <div class="obs-inline">
@@ -938,7 +953,6 @@
                 return wrapper;
             },
 
-            // Helpers
             selectLikert: (qId, val, el) => {
                 const container = document.getElementById(`likert-${qId}`);
                 container.querySelectorAll('.likert-option').forEach(d => d.classList.remove('selected'));
@@ -968,53 +982,55 @@
                 app.saveAnswer(qId, current);
             },
 
-            handleSportChange: (qId, el) => {
-                const val = el.value;
-                app.saveAnswer(qId, val);
-                const detailsDiv = document.getElementById(`sport-details-${qId}`);
-                if (val) detailsDiv.classList.remove('hidden');
-                else detailsDiv.classList.add('hidden');
+            handleMultiSport: (qId, el) => {
+                let current = AppState.data.answers[qId]?.value || [];
+                if (!Array.isArray(current)) current = [];
+                const sName = el.value;
+                const detailsDiv = document.getElementById(`details-${qId}-${sName.replace(/\s+/g,'')}`);
+
+                if (el.checked) {
+                    if (!current.includes(sName)) current.push(sName);
+                    detailsDiv.classList.remove('hidden');
+                } else {
+                    current = current.filter(v => v !== sName);
+                    detailsDiv.classList.add('hidden');
+                }
+                app.saveAnswer(qId, current);
             },
 
-            saveSportDetails: (qId, field, val) => {
+            saveMultiSportDetails: (qId, sportName, field, val) => {
                 let details = AppState.data.answers[qId]?.sportDetails || {};
-                details[field] = val;
+                if (!details[sportName]) details[sportName] = {};
+                details[sportName][field] = val;
                 app.saveAnswer(qId, details, 'sportDetails');
             }
         };
 
-        // --- 5. LÓGICA DE AVALIAÇÃO (Regras) ---
         const logic = {
             evaluate: (q, val) => {
-                if (!q.rule && q.type !== 'likert') return 'none'; // Sem regra
+                if (!q.rule && q.type !== 'likert' && q.type !== 'bristol') return 'none'; 
                 
-                // Lógica Bristol
                 if (q.type === 'bristol') {
                     if (val == 3 || val == 4) return 'good';
                     return 'bad';
                 }
 
-                // Lógica Likert
                 if (q.type === 'likert') {
-                    // Se for pergunta negativa (ex: estresse), Nenhuma/Pouca é bom
                     if (q.rule && q.rule.type === 'lowerIsBetter') {
-                         if (['Nenhuma', 'Pouca', 'Não', 'Difícil'].includes(val)) return 'good'; // Difícil ter controle = bad? Não, espera.
-                         // Ajuste controle de doces: "Teve dificuldade?" -> Nenhuma(Good), Muita(Bad)
-                         // Ajuste escala invertida: "Nenhuma"(Good), "Muita"(Bad)
-                         if (val === 'Nenhuma' || val === 'Pouca' || val === 'Não') return 'good';
-                         if (val === 'Muita' || val === 'Moderada' || val === 'Sim') return 'bad';
-                         // Controle de doces (Fácil/Dificil)
-                         if (val === 'Foi Fácil') return 'good';
-                         if (val === 'Foi Difícil') return 'bad';
+                         if (['Nenhuma', 'Pouca', 'Não', 'Difícil'].includes(val)) return 'good'; 
+                         if (['Muita', 'Moderada', 'Sim', 'Foi Difícil'].includes(val)) return 'bad';
+                         if (val === 'Nunca' || val === 'Às vezes') return 'good'; // Para Comer rápido (Pressa): Nunca é bom
                     } else {
-                        // Padrão: Ótimo/Bem = Good
+                        // Caso especial para horário (Higher is better)
+                        if (['Sempre', 'Quase sempre'].includes(val)) return 'good';
+                        if (['Nunca'].includes(val)) return 'bad';
+
                         if (val === 'Ruim') return 'bad';
                         if (val === 'Bem' || val === 'Ótimo' || val === 'Sim') return 'good';
                     }
                     return 'neutral';
                 }
 
-                // Numéricos
                 const num = parseFloat(val);
                 if (isNaN(num)) return 'neutral';
                 const r = q.rule;
@@ -1029,23 +1045,38 @@
             formatValue: (q, val, other, sportDetails) => {
                 let text = val;
                 
-                if (q.type === 'sport_selector' && sportDetails) {
-                    if (!val) return '';
-                    let d = ` (${sportDetails.freq || '?'}x sem`;
-                    if (sportDetails.min) d += `, ${sportDetails.min} min`;
-                    d += ')';
-                    return val + d;
+                if (q.type === 'sport_multi' && Array.isArray(val)) {
+                    if (val.length === 0) return '';
+                    return val.map(s => {
+                        let d = s;
+                        if (sportDetails && sportDetails[s]) {
+                            const f = sportDetails[s].freq;
+                            const m = sportDetails[s].min;
+                            if (f || m) d += ` (${f || '?'}x, ${m || '?'}min)`;
+                        }
+                        return d;
+                    }).join(' | ');
                 }
 
                 if (Array.isArray(val)) text = val.join(', ');
                 
                 if (q.type === 'likert') {
-                    // Mapeia texto amigável se necessário, ou usa o valor direto que já é amigável
                     const map = {
                         'Ruim':'😞 Ruim', 'Ok':'😐 Ok', 'Bem':'🙂 Bem', 'Ótimo':'🤩 Ótimo',
                         'Nenhuma':'🤩 Nenhuma', 'Pouca':'🙂 Pouca', 'Moderada':'😐 Moderada', 'Muita':'😞 Muita',
-                        'Difícil': '😞 Difícil', 'Razoável': '😐 Razoável', 'Fácil': '🤩 Fácil'
+                        'Difícil': '😞 Difícil', 'Razoável': '😐 Razoável', 'Fácil': '🤩 Fácil',
+                        'Nunca': '😞 Nunca', 'Às vezes': '😐 Às vezes', 'Quase sempre': '🙂 Quase sempre', 'Sempre': '🤩 Sempre',
                     };
+                    // Override para Pressa (onde Nunca é bom)
+                    if (q.id === 'diet_hurry') {
+                        map['Nunca'] = '🤩 Nunca'; 
+                        map['Às vezes'] = '🙂 Às vezes';
+                        map['Sempre'] = '😞 Sempre';
+                    } else if (q.id === 'diet_schedule') {
+                         map['Nunca'] = '😞 Nunca'; 
+                         map['Sempre'] = '🤩 Sempre';
+                    }
+
                     text = map[val] || val;
                 }
 
@@ -1062,7 +1093,15 @@
             }
         };
 
-        // Inicialização
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : { r: 0, g: 0, b: 0 };
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             app.init();
         });
