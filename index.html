@@ -394,6 +394,7 @@
       .summary-block {
         margin-bottom: 2rem;
         break-inside: avoid;
+        page-break-inside: avoid; /* Garante que o bloco não quebre de forma feia */
       }
       .summary-header {
         background: var(--block-color);
@@ -469,16 +470,20 @@
         /* Truque para remover cabeçalho/rodapé do navegador (URL, data, etc) */
         @page {
           size: A4;
-          margin: 0mm; /* Remove margens do sistema */
+          margin: 10mm; /* Margens seguras */
+          margin-bottom: 15mm; /* Espaço extra no final para o rodapé */
         }
 
         /* RESET DE LAYOUT PARA CORRIGIR PÁGINA EM BRANCO */
+        html,
         body {
           margin: 0;
-          padding: 1.5cm 1.5cm 2cm 1.5cm; /* Margem do conteúdo + espaço pro rodapé */
+          padding: 0;
           background: white;
           display: block !important; /* Corrige problema do Flexbox criando página em branco */
           min-height: auto !important;
+          height: auto !important;
+          overflow: visible !important;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
@@ -502,6 +507,7 @@
           box-shadow: none;
           border: 1px solid #eee;
           break-inside: avoid;
+          page-break-inside: avoid;
           margin-bottom: 1rem;
           border-top-width: 2px;
         }
@@ -537,6 +543,9 @@
           border-bottom: none;
           font-weight: 800;
           color: #fff !important;
+          /* Forçar cor de fundo na impressão */
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
         }
         .summary-item {
           border: 1px solid #ccc;
@@ -558,7 +567,7 @@
         .print-footer {
           display: block;
           position: fixed;
-          bottom: 5mm;
+          bottom: 0;
           left: 0;
           right: 0;
           text-align: center;
@@ -567,6 +576,12 @@
           border-top: 1px solid #eee;
           padding-top: 5px;
           background: white;
+          height: 10mm; /* Altura fixa para o rodapé */
+        }
+        
+        /* Espaço no final do conteúdo para não sobrepor o rodapé */
+        #summary-content {
+          margin-bottom: 15mm;
         }
       }
 
@@ -1243,7 +1258,7 @@
                 id: "life_sun",
                 text: "Em quantos dias da semana você teve exposição ao sol?",
                 type: "frequency",
-                rule: { type: "higherIsBetter", target: 4 },
+                rule: { type: "higherIsBetter", target: 3 },
                 obsPlaceholder: "Em quais horários, geralmente?",
               },
               {
@@ -1467,15 +1482,15 @@
 
           const container = document.getElementById("block-container");
           container.innerHTML = `
-                    <div class="card" style="text-align:center;">
-                        <small style="color: ${color}; font-weight: bold; text-transform: uppercase;">Bloco ${
+                        <div class="card" style="text-align:center;">
+                            <small style="color: ${color}; font-weight: bold; text-transform: uppercase;">Bloco ${
             blockIndex + 1
           } de ${totalBlocks}</small>
-                        <h2 style="margin-top: 0.5rem; color: #374151;">${
-                          block.title
-                        }</h2>
-                    </div>
-                `;
+                            <h2 style="margin-top: 0.5rem; color: #374151;">${
+                              block.title
+                            }</h2>
+                        </div>
+                    `;
 
           block.questions.forEach((q) => {
             container.appendChild(
@@ -1582,27 +1597,30 @@
                   icon = "";
 
                 html += `
-                                <div class="summary-item">
-                                    <div class="summary-row">
-                                        <div class="summary-q">${q.text}</div>
-                                        <div class="summary-res">
-                                            <span>${displayVal}</span>
-                                            <div class="${
-                                              status !== "none"
-                                                ? "status-badge " + badgeClass
-                                                : "hidden"
-                                            }">
-                                                ${icon}
+                                    <div class="summary-item">
+                                        <div class="summary-row">
+                                            <div class="summary-q">${
+                                              q.text
+                                            }</div>
+                                            <div class="summary-res">
+                                                <span>${displayVal}</span>
+                                                <div class="${
+                                                  status !== "none"
+                                                    ? "status-badge " +
+                                                      badgeClass
+                                                    : "hidden"
+                                                }">
+                                                    ${icon}
+                                                </div>
                                             </div>
                                         </div>
+                                        ${
+                                          ans.obs
+                                            ? `<div class="summary-obs">Obs: ${ans.obs}</div>`
+                                            : ""
+                                        }
                                     </div>
-                                    ${
-                                      ans.obs
-                                        ? `<div class="summary-obs">Obs: ${ans.obs}</div>`
-                                        : ""
-                                    }
-                                </div>
-                            `;
+                                `;
                 hasItems = true;
               }
             });
@@ -1680,108 +1698,110 @@
           if (q.type === "likert") {
             const scale = q.scale || ESCALA_PADRAO;
             inputHtml = `<div class="likert-container" id="likert-${q.id}">
-                        ${scale
-                          .map(
-                            (opt) => `
-                            <div class="likert-option ${
-                              val === opt.v ? "selected" : ""
-                            }" 
-                                 onclick="renderer.selectLikert('${q.id}', '${
-                              opt.v
-                            }', this)">
-                                <span class="likert-emoji">${opt.e}</span>
-                                <span class="likert-label">${opt.l}</span>
-                            </div>
-                        `
-                          )
-                          .join("")}
-                    </div>`;
+                            ${scale
+                              .map(
+                                (opt) => `
+                                <div class="likert-option ${
+                                  val === opt.v ? "selected" : ""
+                                }" 
+                                     onclick="renderer.selectLikert('${
+                                       q.id
+                                     }', '${opt.v}', this)">
+                                    <span class="likert-emoji">${opt.e}</span>
+                                    <span class="likert-label">${opt.l}</span>
+                                </div>
+                            `
+                              )
+                              .join("")}
+                        </div>`;
           } else if (q.type === "slider_count") {
             inputHtml = `<div class="range-container">
-                        <span id="disp-${q.id}" class="range-value">${
+                            <span id="disp-${q.id}" class="range-value">${
               val !== "" ? val : 0
             }</span>
-                        <input type="range" min="0" max="${
-                          q.max || 20
-                        }" value="${val !== "" ? val : 0}" 
-                               oninput="document.getElementById('disp-${
-                                 q.id
-                               }').innerText = this.value; app.saveAnswer('${
+                            <input type="range" min="0" max="${
+                              q.max || 20
+                            }" value="${val !== "" ? val : 0}" 
+                                   oninput="document.getElementById('disp-${
+                                     q.id
+                                   }').innerText = this.value; app.saveAnswer('${
               q.id
             }', this.value)">
-                    </div>`;
+                        </div>`;
           } else if (q.type === "number") {
             inputHtml = `<div style="display:flex; gap:0.5rem; align-items:center;">
-                        <button class="btn btn-secondary" style="width:auto; padding:0.5rem 1rem;" onclick="renderer.stepInput('${
-                          q.id
-                        }', -${q.step || 1})">-</button>
-                        <input type="number" id="inp-${
-                          q.id
-                        }" value="${val}" step="${q.step || 1}" 
-                               oninput="app.saveAnswer('${
-                                 q.id
-                               }', this.value)" style="text-align:center; font-size:1.3rem; font-weight:bold; margin:0;">
-                        <button class="btn btn-secondary" style="width:auto; padding:0.5rem 1rem;" onclick="renderer.stepInput('${
-                          q.id
-                        }', ${q.step || 1})">+</button>
-                    </div>`;
+                            <button class="btn btn-secondary" style="width:auto; padding:0.5rem 1rem;" onclick="renderer.stepInput('${
+                              q.id
+                            }', -${q.step || 1})">-</button>
+                            <input type="number" id="inp-${q.id}" value="${val}" step="${
+              q.step || 1
+            }" 
+                                   oninput="app.saveAnswer('${
+                                     q.id
+                                   }', this.value)" style="text-align:center; font-size:1.3rem; font-weight:bold; margin:0;">
+                            <button class="btn btn-secondary" style="width:auto; padding:0.5rem 1rem;" onclick="renderer.stepInput('${
+                              q.id
+                            }', ${q.step || 1})">+</button>
+                        </div>`;
           } else if (q.type === "time") {
             inputHtml = `<input type="time" value="${val}" oninput="app.saveAnswer('${q.id}', this.value)">`;
           } else if (q.type === "frequency") {
             inputHtml = `<div class="range-container">
-                        <span id="disp-${q.id}" class="range-value">${
+                            <span id="disp-${q.id}" class="range-value">${
               val !== "" ? val : 0
             } dias</span>
-                        <input type="range" min="0" max="7" value="${
-                          val !== "" ? val : 0
-                        }" 
-                               oninput="document.getElementById('disp-${
-                                 q.id
-                               }').innerText = this.value + ' dias'; app.saveAnswer('${
+                            <input type="range" min="0" max="7" value="${
+                              val !== "" ? val : 0
+                            }" 
+                                   oninput="document.getElementById('disp-${
+                                     q.id
+                                   }').innerText = this.value + ' dias'; app.saveAnswer('${
               q.id
             }', this.value)">
-                    </div>`;
+                        </div>`;
           } else if (q.type === "bristol") {
             inputHtml = `<div class="text-muted text-sm mb-2" style="text-align:center;">A seguir selecione a sua última evacuação:</div>
-                    <div class="bristol-container">
-                        ${DADOS_BRISTOL.map(
-                          (t) => `
-                            <div class="bristol-option ${
-                              val == t.t ? "selected" : ""
-                            }" onclick="renderer.selectBristol('${q.id}', ${
-                            t.t
-                          }, this)">
-                                <div class="bristol-emoji">${t.e}</div>
-                                <div class="bristol-info">
-                                    <h4>${t.n}</h4>
-                                    <p>${t.desc}</p>
-                                    <span class="bristol-tag">${t.meta}</span>
+                        <div class="bristol-container">
+                            ${DADOS_BRISTOL.map(
+                              (t) => `
+                                <div class="bristol-option ${
+                                  val == t.t ? "selected" : ""
+                                }" onclick="renderer.selectBristol('${q.id}', ${
+                                t.t
+                              }, this)">
+                                    <div class="bristol-emoji">${t.e}</div>
+                                    <div class="bristol-info">
+                                        <h4>${t.n}</h4>
+                                        <p>${t.desc}</p>
+                                        <span class="bristol-tag">${
+                                          t.meta
+                                        }</span>
+                                    </div>
                                 </div>
-                            </div>
-                        `
-                        ).join("")}
-                    </div>`;
+                            `
+                            ).join("")}
+                        </div>`;
           } else if (q.type === "text") {
             inputHtml = `<textarea rows="2" oninput="app.saveAnswer('${q.id}', this.value)">${val}</textarea>`;
           } else if (q.type === "checkbox") {
             const checks = Array.isArray(val) ? val : [];
             inputHtml = `<div class="check-group">
-                        ${q.options
-                          .map(
-                            (opt) => `
-                            <label class="check-option">
-                                <input type="checkbox" value="${opt}" ${
-                              checks.includes(opt) ? "checked" : ""
-                            } 
-                                       onchange="renderer.handleCheck('${
-                                         q.id
-                                       }', this)">
-                                ${opt}
-                            </label>
-                        `
-                          )
-                          .join("")}
-                    </div>`;
+                            ${q.options
+                              .map(
+                                (opt) => `
+                                <label class="check-option">
+                                    <input type="checkbox" value="${opt}" ${
+                                  checks.includes(opt) ? "checked" : ""
+                                } 
+                                           onchange="renderer.handleCheck('${
+                                             q.id
+                                           }', this)">
+                                    ${opt}
+                                </label>
+                            `
+                              )
+                              .join("")}
+                        </div>`;
           }
 
           // MULTI SPORT SELECTOR (NOVO)
@@ -1803,45 +1823,45 @@
             const details = savedAns.sportDetails || {};
 
             inputHtml = `<div class="check-group">
-                        ${sports
-                          .map(
-                            (s) => `
-                            <div class="sport-item">
-                                <label class="sport-header">
-                                    <input type="checkbox" value="${s}" ${
-                              currentSports.includes(s) ? "checked" : ""
-                            } 
-                                           onchange="renderer.handleMultiSport('${
-                                             q.id
-                                           }', this)">
-                                    ${s}
-                                </label>
-                                <div id="details-${q.id}-${s.replace(
-                              /\s+/g,
-                              ""
-                            )}" class="sport-details ${
-                              currentSports.includes(s) ? "" : "hidden"
-                            }">
-                                    <label class="text-sm mt-2">Vezes na semana:</label>
-                                    <input type="number" placeholder="Ex: 3" value="${
-                                      details[s]?.freq || ""
-                                    }" 
-                                           oninput="renderer.saveMultiSportDetails('${
-                                             q.id
-                                           }', '${s}', 'freq', this.value)">
-                                    <label class="text-sm mt-1">Minutos:</label>
-                                    <input type="number" placeholder="Ex: 60" value="${
-                                      details[s]?.min || ""
-                                    }" 
-                                           oninput="renderer.saveMultiSportDetails('${
-                                             q.id
-                                           }', '${s}', 'min', this.value)">
+                            ${sports
+                              .map(
+                                (s) => `
+                                <div class="sport-item">
+                                    <label class="sport-header">
+                                        <input type="checkbox" value="${s}" ${
+                                  currentSports.includes(s) ? "checked" : ""
+                                } 
+                                               onchange="renderer.handleMultiSport('${
+                                                 q.id
+                                               }', this)">
+                                        ${s}
+                                    </label>
+                                    <div id="details-${q.id}-${s.replace(
+                                  /\s+/g,
+                                  ""
+                                )}" class="sport-details ${
+                                  currentSports.includes(s) ? "" : "hidden"
+                                }">
+                                        <label class="text-sm mt-2">Vezes na semana:</label>
+                                        <input type="number" placeholder="Ex: 3" value="${
+                                          details[s]?.freq || ""
+                                        }" 
+                                               oninput="renderer.saveMultiSportDetails('${
+                                                 q.id
+                                               }', '${s}', 'freq', this.value)">
+                                        <label class="text-sm mt-1">Minutos:</label>
+                                        <input type="number" placeholder="Ex: 60" value="${
+                                          details[s]?.min || ""
+                                        }" 
+                                               oninput="renderer.saveMultiSportDetails('${
+                                                 q.id
+                                               }', '${s}', 'min', this.value)">
+                                    </div>
                                 </div>
-                            </div>
-                        `
-                          )
-                          .join("")}
-                    </div>`;
+                            `
+                              )
+                              .join("")}
+                        </div>`;
           }
 
           wrapper.insertAdjacentHTML("beforeend", inputHtml);
@@ -1851,11 +1871,11 @@
             wrapper.insertAdjacentHTML(
               "beforeend",
               `
-                        <div class="mt-4">
-                            <label class="text-sm text-muted">Outros:</label>
-                            <input type="text" value="${otherVal}" oninput="app.saveAnswer('${q.id}', this.value, 'other')">
-                        </div>
-                    `
+                            <div class="mt-4">
+                                <label class="text-sm text-muted">Outros:</label>
+                                <input type="text" value="${otherVal}" oninput="app.saveAnswer('${q.id}', this.value, 'other')">
+                            </div>
+                        `
             );
           }
 
@@ -1863,16 +1883,17 @@
           wrapper.insertAdjacentHTML(
             "beforeend",
             `
-                    <div class="obs-inline">
-                        <label>Observação (Opcional)</label>
-                        <textarea placeholder="${
-                          q.obsPlaceholder || "Ex: Onde? Quando? Detalhes..."
-                        }" 
-                                  oninput="app.saveAnswer('${
-                                    q.id
-                                  }', this.value, 'obs')">${obsVal}</textarea>
-                    </div>
-                `
+                        <div class="obs-inline">
+                            <label>Observação (Opcional)</label>
+                            <textarea placeholder="${
+                              q.obsPlaceholder ||
+                              "Ex: Onde? Quando? Detalhes..."
+                            }" 
+                                      oninput="app.saveAnswer('${
+                                        q.id
+                                      }', this.value, 'obs')">${obsVal}</textarea>
+                        </div>
+                    `
           );
 
           return wrapper;
@@ -1947,13 +1968,19 @@
             return "bad";
           }
 
+          // Lógica Específica para "Comendo com pressa?"
+          if (q.id === "diet_hurry") {
+            if (val === "Sempre" || val === "Quase sempre") return "bad";
+            if (val === "Às vezes" || val === "Nunca") return "good";
+          }
+
           if (q.type === "likert") {
             if (q.rule && q.rule.type === "lowerIsBetter") {
               if (["Nenhuma", "Pouca", "Não", "Difícil"].includes(val))
                 return "good";
               if (["Muita", "Moderada", "Sim", "Foi Difícil"].includes(val))
                 return "bad";
-              if (val === "Nunca" || val === "Às vezes") return "good"; // Para Comer rápido (Pressa): Nunca é bom
+              if (val === "Nunca" || val === "Às vezes") return "good";
             } else {
               // Caso especial para horário (Higher is better)
               if (["Sempre", "Quase sempre"].includes(val)) return "good";
@@ -2018,10 +2045,11 @@
               "Quase sempre": "🙂 Quase sempre",
               Sempre: "🤩 Sempre",
             };
-            // Override para Pressa (onde Nunca é bom)
+            // Override para Pressa
             if (q.id === "diet_hurry") {
               map["Nunca"] = "🤩 Nunca";
               map["Às vezes"] = "🙂 Às vezes";
+              map["Quase sempre"] = "😐 Quase sempre"; // Mantém a visualização emoji, mas a cor será Red
               map["Sempre"] = "😞 Sempre";
             } else if (q.id === "diet_schedule") {
               map["Nunca"] = "😞 Nunca";
